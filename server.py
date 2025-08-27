@@ -219,14 +219,46 @@ def main():
             return {
                 "server_name": "VAMDC MCP Server",
                 "version": "1.0.0",
-                "available_tools": ["get_lines", "get_species", "get_nodes"],
+                "available_tools": ["get_lines", "get_species", "get_nodes", "get_species_by_node"],
                 "description": "Server for accessing VAMDC spectroscopic databases",
                 "endpoints": {
                 "species": "Get all available chemical species",
                 "nodes": "Get all available database nodes", 
-                "lines": "Get spectral lines within wavelength range"
+                "lines": "Get spectral lines within wavelength range",
+                "species_by_node": "Get chemical species from a specific database node"
                 }
             }
+
+        @server.tool()
+        async def get_species_by_node(node_url: str) -> List[Dict[str, Any]]:
+            """
+            Gets chemical species data from a specific VAMDC database node.
+            
+            Args:
+                node_url (str): The TAP endpoint URL of the database node to query.
+                               Example: "http://vald.astro.uu.se/atoms-12.07/tap/"
+            
+            Returns:
+                List[Dict[str, Any]]: A list of dictionaries containing species information from the specified node,
+                each containing the same fields as get_species but filtered to the specific database node.
+            """
+            def get_species_by_node_sync():
+                # Query the specific node by filtering all species for this node's TAP endpoint
+                all_species_df, _ = species.getAllSpecies()
+                
+                # Filter species to only those from the specified node
+                node_species_df = all_species_df[all_species_df['tapEndpoint'] == node_url]
+                
+                return node_species_df.to_dict(orient='records')
+            
+            # Run the blocking operation in a thread pool
+            import asyncio
+            import concurrent.futures
+            
+            loop = asyncio.get_event_loop()
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                result = await loop.run_in_executor(pool, get_species_by_node_sync)
+                return result
      
 
         print("Tools registered, starting MCP stdio server")
