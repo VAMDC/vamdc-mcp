@@ -1,6 +1,6 @@
 # /// script
-# requires-python = ">=3.13"
-# dependencies = ["fastmcp", "pandas", "pyvamdc @ file:///Users/tom/work/vamdc/carlo-mcp/pyVAMDC"]
+# requires-python = ">=3.11"
+# dependencies = ["fastmcp", "pandas", "pyvamdc @ file:///Users/tom/work/vamdc/pyVAMDC.git"]
 # ///
 
 from mcp.server.fastmcp import FastMCP
