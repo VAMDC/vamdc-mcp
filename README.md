@@ -210,6 +210,16 @@ Replace `/path/to/vamdc-mcp` with the actual path to your cloned repository.
 
 **Note**: The `start_server.sh` script is included for convenience and handles directory navigation automatically.
 
+### OpenAI Codex
+
+Adding the local MCP to Codex just takes this command, run from within the base directory of this repository:
+
+```bash
+codex mcp add vamdc -- uv run server.py --transport stdio
+```
+
+After that, the tools are available in Codex sessions.
+
 ## Available Tools
 
 ### 1. get_server_info
