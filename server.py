@@ -133,24 +133,38 @@ async def get_server_info() -> Dict[str, Any]:
 
 
 @mcp.tool()
-async def get_nodes() -> List[Dict[str, Any]]:
+async def get_nodes() -> str:
     """
     Gets all the Nodes available on the Species Database.
-    Returns a list of dictionaries containing node information.
-            
+    Returns a markdown table with all node information.
+
     Returns:
-        list: A list of dictionaries, each containing:
-            - shortName (str): Short name identifier for the database node
-            - description (str): Descriptive text about the database node
-            - contactEmail (str): Email address for contacting the node maintainer
-            - ivoIdentifier (str): Unique IVO (International Virtual Observatory) identifier for the node
-            - tapEndpoint (str): TAP (Table Access Protocol) endpoint URL for the database node
-            - referenceUrl (str): Reference URL with additional information about the node
-            - lastUpdate (date): Date when the node was last updated
-            - lastSeen (date): Date when the node was last seen/accessed
-            - topics (list): List of strings describing the scientific topics covered by the node
+        str: A markdown-formatted table containing all database nodes with columns:
+            - shortName: Short name identifier for the database node
+            - tapEndpoint: TAP (Table Access Protocol) endpoint URL for the database node
+            - topics: List of scientific topics covered by the node
     """
-    return getNodes()
+    nodes = getNodes()
+
+    # Build markdown table
+    table_lines = [
+        "| Short Name | TAP Endpoint | Topics |",
+        "|------------|--------------|--------|"
+    ]
+
+    for node in nodes:
+        short_name = node.get('shortName', '')
+        tap_endpoint = node.get('tapEndpoint', '')
+        topics = ', '.join(node.get('topics', []))
+
+        # Escape pipe characters in cell content
+        short_name = short_name.replace('|', '\\|')
+        tap_endpoint = tap_endpoint.replace('|', '\\|')
+        topics = topics.replace('|', '\\|')
+
+        table_lines.append(f"| {short_name} | {tap_endpoint} | {topics} |")
+
+    return "\n".join(table_lines)
 
 @mcp.tool()
 async def get_species(state: str) -> List[Dict[str, Any]]:
