@@ -173,6 +173,21 @@ To use with Claude Desktop, add to your Claude Desktop config file:
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
+#### Option 1: Using the start script (recommended)
+
+```json
+{
+  "mcpServers": {
+    "vamdc": {
+      "command": "bash",
+      "args": ["/path/to/vamdc-mcp/start_server.sh"]
+    }
+  }
+}
+```
+
+#### Option 2: Direct uv command
+
 ```json
 {
   "mcpServers": {
@@ -192,6 +207,8 @@ To use with Claude Desktop, add to your Claude Desktop config file:
 ```
 
 Replace `/path/to/vamdc-mcp` with the actual path to your cloned repository.
+
+**Note**: The `start_server.sh` script is included for convenience and handles directory navigation automatically.
 
 ## Available Tools
 

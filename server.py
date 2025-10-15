@@ -280,6 +280,7 @@ if __name__ == "__main__":
         print(f"Starting VAMDC MCP server with HTTP transport on http://localhost:{args.port}/mcp")
         uvicorn.run(mcp.streamable_http_app, host="localhost", port=args.port)
     else:
-        # Start the server with stdio transport
-        print("Starting VAMDC MCP server with stdio transport", flush=True)
+        # Start the server with stdio transport (log to stderr to avoid interfering with JSON-RPC)
+        import sys
+        print("Starting VAMDC MCP server with stdio transport", file=sys.stderr, flush=True)
         asyncio.run(mcp.run_stdio_async())
