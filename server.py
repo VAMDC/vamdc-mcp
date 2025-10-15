@@ -120,12 +120,13 @@ async def get_server_info() -> Dict[str, Any]:
     return {
                 "server_name": "VAMDC MCP Server",
                 "version": "1.0.0",
-                "available_tools": ["get_server_info", "get_nodes", "get_species", "get_lines"],
+                "available_tools": ["get_server_info", "get_nodes", "get_species", "get_species_by_node", "get_lines"],
                 "description": "Server for accessing VAMDC spectroscopic databases",
                 "endpoints": {
                 "server_info": "Get server information and capabilities",
                 "species": "Get all available chemical species",
-                "nodes": "Get all available database nodes", 
+                "nodes": "Get all available database nodes",
+                "species_by_node": "Get chemical species from a specific database node",
                 "lines": "Get spectral lines within wavelength range"
             }
     }
@@ -181,6 +182,35 @@ async def get_species(state: str) -> List[Dict[str, Any]]:
             """
     species_dataframe , _ = species.getAllSpecies()
     return species_dataframe.to_dict(orient='records')
+
+
+@mcp.tool()
+async def get_species_by_node(node_url: str) -> List[Dict[str, Any]]:
+    """
+    Gets chemical species data from a specific VAMDC database node.
+
+    Args:
+        node_url (str): The TAP endpoint URL of the database node to query.
+                       Example: "http://vald.astro.uu.se/atoms-12.07/tap/"
+
+    Returns:
+        List[Dict[str, Any]]: A list of dictionaries containing species information from the specified node,
+        each containing the same fields as get_species but filtered to the specific database node.
+    """
+    # Run the blocking operation in a thread pool
+    loop = asyncio.get_event_loop()
+
+    def get_species_by_node_sync():
+        # Query the specific node by filtering all species for this node's TAP endpoint
+        all_species_df, _ = species.getAllSpecies()
+
+        # Filter species to only those from the specified node
+        node_species_df = all_species_df[all_species_df['tapEndpoint'] == node_url]
+
+        return node_species_df.to_dict(orient='records')
+
+    result = await loop.run_in_executor(None, get_species_by_node_sync)
+    return result
 
 
 @mcp.tool()
