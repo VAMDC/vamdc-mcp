@@ -3,7 +3,7 @@
 # dependencies = [
 #     "mcp",
 #     "uvicorn",
-#     "pyvamdc @ file:///Users/tom/work/vamdc/pyVAMDC.git"
+#     "pyvamdc @ git+https://github.com/VAMDC/pyVAMDC.git"
 # ]
 # ///
 
