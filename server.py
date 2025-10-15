@@ -36,11 +36,55 @@ def getSpecies():
 
 def getNodes():
     """
-    Gets all the Nodes available on the Species Database. 
+    Gets all the Nodes available on the Species Database.
     Returns a Pandas dataframe with information regarding the Nodes.
     """
     _, nodes_dataframe = species.getAllSpecies()
     return nodes_dataframe.to_dict(orient='records')
+
+def format_species_as_markdown_table(species_list: List[Dict[str, Any]]) -> str:
+    """
+    Formats a list of species dictionaries as a markdown table.
+
+    Args:
+        species_list: List of species dictionaries
+
+    Returns:
+        Markdown-formatted table string
+    """
+    # Define columns to include
+    columns = [
+        'name',
+        'stoichiometricFormula',
+        'InChIKey',
+        'speciesType',
+        'charge',
+        'massNumber',
+        'structuralFormula',
+        'shortName',
+        '# unique atoms',
+        '# total atoms',
+        'computed charge',
+        'computed mol_weight'
+    ]
+
+    # Build markdown table
+    header = '| ' + ' | '.join(columns) + ' |'
+    separator = '|' + '|'.join(['---' for _ in columns]) + '|'
+
+    table_lines = [header, separator]
+
+    for species_dict in species_list:
+        row_values = []
+        for col in columns:
+            value = species_dict.get(col, '')
+            # Convert to string and escape pipe characters
+            value_str = str(value).replace('|', '\\|')
+            row_values.append(value_str)
+
+        table_lines.append('| ' + ' | '.join(row_values) + ' |')
+
+    return '\n'.join(table_lines)
 
 async def getLines(lambda_min, lambda_max, listNodes=None, listSpecies=None):
     """
@@ -167,49 +211,44 @@ async def get_nodes() -> str:
     return "\n".join(table_lines)
 
 @mcp.tool()
-async def get_species(state: str) -> List[Dict[str, Any]]:
+async def get_species(state: str) -> str:
     """
-            Gets all the chemical information available on the Species Database.
-            Returns a list of dictionaries containing chemical species information.
-            
-            Returns:
-                list: A list of dictionaries, each containing:
-                    - shortname (str): Human readable name for the database containing the current species
-                    - ivoIdentifier (str): Unique identifier for the database containing the current species
-                    - InChI (str): InChI chemical unique identifier for the current species
-                    - InChIKey (str): InChIKey derived from the InChI for the current species
-                    - stoichiometricFormula (str): Stoichiometric formula for the current species
-                    - massNumber (int): Mass number for the current species
-                    - charge (int): Electric charge for the current species
-                    - speciesType (str): Type (admitted values are 'molecule', 'atom', 'particle') for the current species
-                    - structuralFormula (str): Structural formula for the current species
-                    - name (str): Human readable species name for the current species
-                    - did (str): Alternative unique identifier for the current species
-                    - tapEndpoint (str): Database TAP-endpoint URL for the database containing the current species
-                    - lastIngestionScriptDate (date): Last ingestion script execution for the database containing the current species
-                    - speciesLastSeenOn (date): Last time species was updated for the database containing the current species
-                    - # unique atoms (int): Number of unique atoms in the current species
-                    - # total atoms (int): Total number of atoms in the current species
-                    - computed charge (int): Computed charge for the current species
-                    - computed mass number (float): Computed mass number for the current species
+    Gets all the chemical information available on the Species Database.
+    Returns a markdown table with species information.
 
-            """
-    species_dataframe , _ = species.getAllSpecies()
-    return species_dataframe.to_dict(orient='records')
+    Returns:
+        str: A markdown-formatted table containing all chemical species with columns:
+            - name: Human readable species name
+            - stoichiometricFormula: Stoichiometric formula
+            - InChIKey: InChIKey chemical identifier
+            - speciesType: Type (molecule, atom, or particle)
+            - charge: Electric charge
+            - massNumber: Mass number
+            - structuralFormula: Structural formula
+            - shortName: Database name containing the species
+            - # unique atoms: Number of unique atoms
+            - # total atoms: Total number of atoms
+            - computed charge: Computed charge
+            - computed mol_weight: Computed molecular weight
+    """
+    species_dataframe, _ = species.getAllSpecies()
+    species_list = species_dataframe.to_dict(orient='records')
+    return format_species_as_markdown_table(species_list)
 
 
 @mcp.tool()
-async def get_species_by_node(node_url: str) -> List[Dict[str, Any]]:
+async def get_species_by_node(node_url: str) -> str:
     """
     Gets chemical species data from a specific VAMDC database node.
+    Returns a markdown table with species information.
 
     Args:
         node_url (str): The TAP endpoint URL of the database node to query.
                        Example: "http://vald.astro.uu.se/atoms-12.07/tap/"
 
     Returns:
-        List[Dict[str, Any]]: A list of dictionaries containing species information from the specified node,
-        each containing the same fields as get_species but filtered to the specific database node.
+        str: A markdown-formatted table containing species information from the specified node,
+        with the same columns as get_species but filtered to the specific database node.
     """
     # Run the blocking operation in a thread pool
     loop = asyncio.get_event_loop()
@@ -223,8 +262,8 @@ async def get_species_by_node(node_url: str) -> List[Dict[str, Any]]:
 
         return node_species_df.to_dict(orient='records')
 
-    result = await loop.run_in_executor(None, get_species_by_node_sync)
-    return result
+    species_list = await loop.run_in_executor(None, get_species_by_node_sync)
+    return format_species_as_markdown_table(species_list)
 
 
 @mcp.tool()
